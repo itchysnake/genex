@@ -18,4 +18,3 @@ class RegistrationForm(FlaskForm):
     
     submit_button = SubmitField("Create")
     
-    
