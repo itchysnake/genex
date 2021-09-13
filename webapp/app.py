@@ -23,11 +23,6 @@ def index():
         username = reg_form.username.data
         password = reg_form.password.data
         
-        # Check username uniqueness
-        user_obj = User.query.filter_by(username = username).first()
-        if user_obj:
-            return "Username taken"
-        
         # add to DB
         user = User(username = username,
                     password = password)
