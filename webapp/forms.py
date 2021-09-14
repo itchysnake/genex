@@ -5,6 +5,9 @@ from wtforms.validators import InputRequired, Length, EqualTo, ValidationError
 # database
 from models import User
 
+# encryption
+from passlib.hash import pbkdf2_sha256 
+
 # custom validator
 def invalid_credentials(form, field):
     username_entered = form.username.data
@@ -13,7 +16,8 @@ def invalid_credentials(form, field):
     user_obj = User.query.filter_by(username = username_entered).first()
     if user_obj is None:
         raise ValidationError("Username or password incorrect")
-    elif password_entered != user_obj.password:
+   
+    elif not pbkdf2_sha256.verify(password_entered, user_obj.password):
         raise ValidationError("Username or password incorrect")
 
 class RegistrationForm(FlaskForm):
