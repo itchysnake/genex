@@ -1,0 +1,1 @@
+# File that runs the server# this file should primarily import all dependancies to make app runfrom app import app, routes, modelsif __name__=="__main__":    app.run(debug = True)
