@@ -2,3 +2,4 @@ __pycache__/
 flask_session/
 webapp-chat/
 webapp-test/
+.DS_Store
