@@ -12,3 +12,13 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String(), unique=True, nullable = False)
     password = db.Column(db.String(), nullable = False)
+    
+class Token(db.Model):
+    """
+    Tokens table
+    """
+    __tablename__ = "tokens"
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(), unique = True, nullable = False)
+    symbol = db.Column(db.String(), unique = True, nullable = False)
+    totalSupply = db.Column(db.Integer(), nullable = False)

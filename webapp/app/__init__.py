@@ -1,5 +1,5 @@
 # File that creates the app
-# All imports for the app itself should be to this file
+# All imports for the app itself are made to this directory (app.[ABC])
 
 # App initialisation
 from flask import Flask

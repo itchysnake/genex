@@ -1,7 +1,7 @@
 # Throw error
 from wtforms.validators import ValidationError
 # Database access
-from app.models import User
+from app.models import User, Token
 # Encryption
 from passlib.hash import pbkdf2_sha256
 
@@ -33,3 +33,19 @@ def pwd_valid(form, field):
         # Checks if password entered matches database password
         if not pbkdf2_sha256.verify(password_entered, user_obj.password):
             raise ValidationError("Password incorrect")
+
+def token_name_avail(form, field):
+    token_name_entered = field.data
+    
+    token_obj = Token.query.filter_by(name = token_name_entered).first()
+    
+    if token_obj is not None:
+        raise ValidationError("Token name taken")
+            
+def token_sym_avail(form, field):
+    token_sym_entered = field.data
+    
+    token_obj = Token.query.filter_by(symbol = token_sym_entered).first()
+    
+    if token_obj is not None:
+        raise ValidationError("Token symbol taken")

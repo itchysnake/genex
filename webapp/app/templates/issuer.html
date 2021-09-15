@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %} Issuer {% endblock %}
+
+{% block content %}
+
+    <form action="{{ url_for('issuer') }}", method="POST">
+
+        <!-- Token Username Label -->
+        <div class="form-field"> 
+            {{ form.token_name.label }}
+            {{ form.token_name }}
+            {% for error in form.token_name.errors %}
+                <li>{{error}}</li>
+            {% endfor %}
+        </div>
+        
+        <!-- Token Symbol Label -->
+        <div class="form-field">
+            {{ form.token_symbol.label }}
+            {{ form.token_symbol }}
+            {% for error in form.token_symbol.errors %}
+                <li>{{error}}</li>
+            {% endfor %}
+        </div>
+        
+        <!-- Total Supply Label -->
+        <div class="form-field">
+            {{ form.total_supply.label }}
+            {{ form.total_supply }}
+            {% for error in form.total_supply.errors %}
+                <li>{{error}}</li>
+            {% endfor %}
+        </div>
+        
+        {{ form.submit }}
+        
+        <!-- CSRF protection -->
+        {{ form.csrf_token  }}
+    
+    </form>
+
+{% endblock %}

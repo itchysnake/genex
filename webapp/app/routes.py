@@ -1,6 +1,6 @@
 # App dependancies
 from app import app, forms
-from app.models import User, db
+from app.models import db, User, Token
 # Flask-general
 from flask import render_template, redirect, url_for, flash
 from flask_login import login_user, current_user, login_required, logout_user
@@ -10,8 +10,36 @@ from passlib.hash import pbkdf2_sha256
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def index():
+    current_user.username
     return render_template("index.html")
 
+@app.route("/issuer", methods=["GET","POST"])
+@login_required
+def issuer():
+    
+    issuer_form = forms.IssuerForm()
+    
+    # add to DB
+    if issuer_form.validate_on_submit():
+        token_name = issuer_form.token_name.data
+        token_symbol = issuer_form.token_symbol.data
+        total_supply = issuer_form.total_supply.data
+        
+        token = Token(name = token_name,
+                      symbol = token_symbol,
+                      totalSupply = total_supply)
+        
+        db.session.add(token)
+        db.session.commit()
+        
+        #Flash feedback
+        flash("Succesfully issued token.", category="success")
+        
+        return redirect(url_for("index"))
+    
+    return render_template("issuer.html", form = issuer_form)
+
+# AUTHORISATION
 @app.route("/register", methods=["GET","POST"])
 def register():
     
@@ -32,7 +60,7 @@ def register():
         db.session.commit()
         
         # Flash feedback
-        flash("Succesfully registered, please login.", category="success")
+        flash("Succesfully registered.", category="success")
         
         return redirect(url_for("login"))
     
@@ -53,7 +81,7 @@ def login():
         login_user(user_obj)
         
         # Flash feedback
-        flash("Succesfully registered, please login.", category="success")
+        flash("Succesfully logged in.", category="success")
         
         return redirect(url_for("index"))
     
@@ -63,5 +91,5 @@ def login():
 @login_required
 def logout():
      logout_user()
-     flash("Log out succesful.", category = "success")
+     flash("Succesfully logged out.", category = "success")
      return redirect(url_for("index"))
