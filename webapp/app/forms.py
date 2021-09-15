@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 # Fields for FlaskForm
 from wtforms import (StringField, IntegerField, PasswordField, BooleanField, SubmitField)
 # Validators
-from wtforms.validators import (InputRequired, Length, EqualTo, ValidationError)
+from wtforms.validators import (InputRequired, Length, EqualTo, NumberRange, ValidationError)
 from app.customValidators import (uname_avail, uname_valid, pwd_valid, token_name_avail,
                                   token_sym_avail)
 
@@ -46,6 +46,7 @@ class IssuerForm(FlaskForm):
                                token_sym_avail])
     
     total_supply = IntegerField(label = "Total Supply",
-                                validators = [InputRequired("Total supply required")])
+                                validators = [InputRequired("Total supply required"),
+                                              NumberRange(min = 1, max = None, message = "Minimum 1")])
     
     submit = SubmitField("Issue")

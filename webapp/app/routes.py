@@ -10,12 +10,15 @@ from passlib.hash import pbkdf2_sha256
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def index():
-    current_user.username
     return render_template("index.html")
 
 @app.route("/issuer", methods=["GET","POST"])
 @login_required
 def issuer():
+    
+    # if issuer has a token redirect to issuer/asset
+    if current_user.token is not None:
+        return "You already have a token!"
     
     issuer_form = forms.IssuerForm()
     
@@ -26,8 +29,10 @@ def issuer():
         total_supply = issuer_form.total_supply.data
         
         token = Token(name = token_name,
+                      user_id = current_user.id,
                       symbol = token_symbol,
                       totalSupply = total_supply)
+        
         
         db.session.add(token)
         db.session.commit()
