@@ -52,9 +52,6 @@ class IssuerForm(FlaskForm):
     submit = SubmitField("Issue")
     
 class TokenOrder(FlaskForm):
-
-    # NOT WORKING - Figure out how to implement KWARGS
-    # Allows passing keyword arguments so this form can be used for both
     direction = RadioField(label = "Direction",
                           validators = [InputRequired()],
                           choices = [("buy", "Buy"),

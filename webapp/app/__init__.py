@@ -1,4 +1,4 @@
-# File that creates the app
+# File that creates (instantiates) the app
 # All imports for the app itself are made to this directory (app.[ABC])
 
 # App initialisation

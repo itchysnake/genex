@@ -36,7 +36,7 @@ class Token(db.Model):
     
 class Order(db.Model):
     """
-    Tracks orders of every user
+    Orders table
     """
     __tablename__ = "orders"
     

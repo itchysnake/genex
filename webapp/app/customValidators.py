@@ -34,6 +34,7 @@ def pwd_valid(form, field):
         if not pbkdf2_sha256.verify(password_entered, user_obj.password):
             raise ValidationError("Password incorrect")
 
+# Determines if token name is available
 def token_name_avail(form, field):
     token_name_entered = field.data
     
@@ -41,7 +42,8 @@ def token_name_avail(form, field):
     
     if token_obj is not None:
         raise ValidationError("Token name taken")
-            
+
+# Determines if token symbol is available
 def token_sym_avail(form, field):
     token_sym_entered = field.data
     

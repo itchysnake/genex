@@ -66,9 +66,10 @@ def issuer():
     
     # issue token form
     issuer_form = forms.IssuerForm()
-    
-    # add to DB
+        
     if issuer_form.validate_on_submit():
+
+        # add to DB
         token_name = issuer_form.token_name.data
         token_symbol = issuer_form.token_symbol.data
         total_supply = issuer_form.total_supply.data
@@ -82,7 +83,7 @@ def issuer():
         db.session.add(token)
         db.session.commit()
         
-        #Flash feedback
+        # Flash feedback
         flash("Succesfully issued token.", category="success")
         
         return redirect(url_for("index"))
