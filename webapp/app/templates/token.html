@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %} Discover {% endblock %}
+
+{% block content %}
+
+    <h1>Token Interface</h1>
+    <!-- Token Information -->
+    {{ token.id }}
+    {{ token.name }}
+    {{ token.symbol }}
+    {{ token.totalSupply }}
+    
+    <form action="{{ url_for('token', token_id=token.id) }}", method="POST">
+
+        <!-- Order form -->
+        <div class="form-field"> 
+            {{ order_form.direction.label }}
+            {{ order_form.direction}}
+            {% for error in order_form.direction.errors %}
+                <li>{{error}}</li>
+            {% endfor %}
+        </div>
+        <div class="form-field"> 
+            {{ order_form.quantity.label }}
+            {{ order_form.quantity}}
+            {% for error in order_form.quantity.errors %}
+                <li>{{error}}</li>
+            {% endfor %}
+        </div>
+        
+        {{ order_form.submit }}
+        
+        <!-- CSRF protection -->
+        {{ order_form.csrf_token  }}
+    </form>
+    
+{% endblock %}

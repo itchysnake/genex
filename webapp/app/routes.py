@@ -1,25 +1,70 @@
 # App dependancies
 from app import app, forms
-from app.models import db, User, Token
+from app.models import db, User, Token, Order
 # Flask-general
 from flask import render_template, redirect, url_for, flash
 from flask_login import login_user, current_user, login_required, logout_user
 # Password encryption
 from passlib.hash import pbkdf2_sha256
 
+# HOME
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def index():
     return render_template("index.html")
 
+# DISCOVER
+@app.route("/discover", methods=["GET"])
+@login_required
+def discover():
+
+    tokens = Token.query.all()
+    
+    return render_template("discover.html", tokens = tokens)
+
+# TOKEN PAGE
+@app.route("/token/<token_id>", methods = ["GET","POST"])
+def token(token_id):
+    
+    # pull token information from url request
+    token = Token.query.filter_by(id = token_id).first()
+    
+    # order form
+    order_form = forms.TokenOrder()
+    
+    if order_form.validate_on_submit():
+        
+        # add to db
+        direction = order_form.direction.data
+        quantity = order_form.quantity.data
+        
+        order = Order(user_id = current_user.id,
+                      token_id = token_id,
+                      direction = direction,
+                      quantity = quantity)
+        
+        db.session.add(order)
+        db.session.commit()
+        
+        # Flash feedback
+        flash("Order placed")
+        return redirect(url_for("index"))
+    
+    return render_template("token.html",
+                           token = token,
+                           order_form = order_form)
+
+# ISSUER CONTROLS
 @app.route("/issuer", methods=["GET","POST"])
 @login_required
 def issuer():
     
     # if issuer has a token redirect to issuer/asset
     if current_user.token is not None:
-        return "You already have a token!"
+        flash("You already have a token!")
+        return redirect(url_for("index"))
     
+    # issue token form
     issuer_form = forms.IssuerForm()
     
     # add to DB

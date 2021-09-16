@@ -1,9 +1,9 @@
 # Creation of FlaskForm
 from flask_wtf import FlaskForm
 # Fields for FlaskForm
-from wtforms import (StringField, IntegerField, PasswordField, BooleanField, SubmitField)
+from wtforms import (StringField, IntegerField, PasswordField, BooleanField, SubmitField, RadioField)
 # Validators
-from wtforms.validators import (InputRequired, Length, EqualTo, NumberRange, ValidationError)
+from wtforms.validators import (InputRequired, Length, EqualTo, NumberRange, ValidationError, Required)
 from app.customValidators import (uname_avail, uname_valid, pwd_valid, token_name_avail,
                                   token_sym_avail)
 
@@ -50,3 +50,20 @@ class IssuerForm(FlaskForm):
                                               NumberRange(min = 1, max = None, message = "Minimum 1")])
     
     submit = SubmitField("Issue")
+    
+class TokenOrder(FlaskForm):
+
+    # NOT WORKING - Figure out how to implement KWARGS
+    # Allows passing keyword arguments so this form can be used for both
+    direction = RadioField(label = "Direction",
+                          validators = [InputRequired()],
+                          choices = [("buy", "Buy"),
+                                     ("sell","Sell")],
+                          default = "buy")
+    
+    quantity = IntegerField(label = "Quantity",
+                            validators = [InputRequired("Quantity required"),
+                                          NumberRange(min = 1, max = None, message = "Minimum 1")])
+    
+    submit = SubmitField("Order")
+    

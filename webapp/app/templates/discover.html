@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %} Discover {% endblock %}
+
+{% block content %}
+
+    {% for token in tokens %}
+        {{ token.name }}
+        {{ token.symbol }}
+        {{ token.totalSupply }}
+        <a href="{{ url_for('token', token_id=token.id) }}">Token Page</a>
+    {% endfor %}
+
+{% endblock %}
