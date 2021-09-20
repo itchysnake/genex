@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %} Portfolio {% endblock %}
+
+{% block content %}
+
+    {% if orders %}
+        {% for order in orders %}
+            {{ order.id }}
+            {{ order.token_id }}
+            {{ order.direction }}
+            {{ order.quantity }}
+            <a href="{{ url_for('token', token_id=order.token_id) }}">Token Page</a>
+        {% endfor %}
+    {% endif %}
+    
+    {% if not orders %}
+    <p> No orders placed, please place orders to view your portfolio. </p>
+    {% endif %}
+
+{% endblock %}

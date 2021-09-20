@@ -43,5 +43,18 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
     token_id = db.Column(db.Integer, db.ForeignKey("tokens.id"), nullable = False)
-    direction = db.Column(db.String(), nullable = False)
+    type = db.Column(db.String(), nullable = False)
+    price = db.Column(db.Float(4), nullable = False)
+    quantity = db.Column(db.Integer, nullable = False)
+    
+class Trade(db.Model):
+    """
+    Trades table
+    """
+    __tablename__ = "trades"
+    id = db.Column(db.Integer, primary_key = True)
+    buyer_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
+    seller_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
+    token_id = db.Column(db.Integer, db.ForeignKey("tokens.id"), nullable = False)
+    price = db.Column(db.Float(4), nullable = False)
     quantity = db.Column(db.Integer, nullable = False)

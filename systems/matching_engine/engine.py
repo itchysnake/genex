@@ -70,8 +70,7 @@ class TradeBook:
         self.tradebook.loc[idx] = trade
 
     def remove(self, trade):
-        pass        
-
+        pass
 
 class MatchingEngine:
     def __init__(self):

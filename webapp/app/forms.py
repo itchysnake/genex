@@ -52,11 +52,14 @@ class IssuerForm(FlaskForm):
     submit = SubmitField("Issue")
     
 class TokenOrder(FlaskForm):
-    direction = RadioField(label = "Direction",
+    price = IntegerField(label = "Price",
+                         validators = [InputRequired("Quantity required")])
+    
+    type = RadioField(label = "Type",
                           validators = [InputRequired()],
-                          choices = [("buy", "Buy"),
-                                     ("sell","Sell")],
-                          default = "buy")
+                          choices = [("bid", "Bid"),
+                                     ("offer","Offer")],
+                          default = "bid")
     
     quantity = IntegerField(label = "Quantity",
                             validators = [InputRequired("Quantity required"),

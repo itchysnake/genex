@@ -15,9 +15,16 @@
 
         <!-- Order form -->
         <div class="form-field"> 
-            {{ order_form.direction.label }}
-            {{ order_form.direction}}
-            {% for error in order_form.direction.errors %}
+            {{ order_form.type.label }}
+            {{ order_form.type}}
+            {% for error in order_form.type.errors %}
+                <li>{{error}}</li>
+            {% endfor %}
+        </div>
+        <div class="form-field"> 
+            {{ order_form.price.label }}
+            {{ order_form.price}}
+            {% for error in order_form.price.errors %}
                 <li>{{error}}</li>
             {% endfor %}
         </div>

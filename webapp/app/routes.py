@@ -24,6 +24,7 @@ def discover():
 
 # TOKEN PAGE
 @app.route("/token/<token_id>", methods = ["GET","POST"])
+@login_required
 def token(token_id):
     
     # pull token information from url request
@@ -35,12 +36,14 @@ def token(token_id):
     if order_form.validate_on_submit():
         
         # add to db
-        direction = order_form.direction.data
+        type = order_form.type.data
+        price = order_form.price.data
         quantity = order_form.quantity.data
         
         order = Order(user_id = current_user.id,
                       token_id = token_id,
-                      direction = direction,
+                      type = type,
+                      price = price,
                       quantity = quantity)
         
         db.session.add(order)
@@ -53,6 +56,17 @@ def token(token_id):
     return render_template("token.html",
                            token = token,
                            order_form = order_form)
+
+# PORTFOLIO
+@app.route("/portfolio", methods = ["GET"])
+@login_required
+def portfolio():
+    
+    # Pull all current user orders
+    orders = Order.query.filter_by(user_id = current_user.id).all()
+    
+    return render_template("portfolio.html",
+                           orders = orders)
 
 # ISSUER CONTROLS
 @app.route("/issuer", methods=["GET","POST"])
