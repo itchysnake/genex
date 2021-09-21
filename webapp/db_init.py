@@ -15,9 +15,9 @@ db.init_app(app)
 
 # Create tables
 def main():
-    db.create_all()
+    with app.app_context():
+        db.create_all()
 
 # Run main() then closes app
-if __name__ == "__main__":
-    with app.app_context():
-        main()
+if __name__=="__main__":
+    main()

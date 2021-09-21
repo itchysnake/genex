@@ -91,7 +91,7 @@ def issuer():
         token = Token(name = token_name,
                       user_id = current_user.id,
                       symbol = token_symbol,
-                      totalSupply = total_supply)
+                      total_supply = total_supply)
         
         
         db.session.add(token)

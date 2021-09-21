@@ -1,12 +1,13 @@
 import psycopg2
-from config import Config
 import pandas as pd
+
+db_url = "postgres://tkvzeqhgrnbszs:899301ba612f5b92a57b37a2cf961522c71580809f6eb8c79c9b404cde0e4450@ec2-52-210-120-210.eu-west-1.compute.amazonaws.com:5432/da532n97r99dvu"
 
 def get_token_ids():
     # Collects all token_ids so they can be used in lookup for parse
     
     try:
-        conn = psycopg2.connect(Config.DATABASE_URL, sslmode='require')
+        conn = psycopg2.connect(db_url, sslmode='require')
     
         cur = conn.cursor()
         
@@ -34,12 +35,15 @@ def get_orders(token_id, direction, sort_by):
         * sort_by
     """
     try:
-        conn = psycopg2.connect(Config.DATABASE_URL, sslmode='require')
+        conn = psycopg2.connect(db_url, sslmode='require')
     
         cur = conn.cursor()
         
+        # looking for tokens of a specific id, either bid or offer, and that haven't been filled
+        # and is ordered ascending or descending depending on if its bid or offer
         sql = """
-        select * from orders WHERE token_id = {} AND type = '{}' ORDER BY price {}
+        select * from orders WHERE token_id = {} AND type = '{}' AND filled = False
+        ORDER BY price {}
         """.format(token_id, direction, sort_by)
         
         cur.execute(sql)
@@ -54,110 +58,233 @@ def get_orders(token_id, direction, sort_by):
     except (Exception, psycopg2.Error) as e:
         print("Error fetching data: ",e)    
 
-def submit_trade():
-    pass
-
-def delete_order()
-
-def parse():
-    """
-    Parses over current orders and finds matching ones which are turned
-    into trades.
-    """
-    token_ids = get_token_ids()
-
-    for token_id in token_ids:
+def submit_trade(bid_order_id, offer_order_id, buyer_id, seller_id, token_id, price, quantity):
+    try: 
+        conn = psycopg2.connect(db_url, sslmode='require')
+    
+        cur = conn.cursor()
         
-        buy_orders = get_orders(token_id, "bid", "DESC")
-        sell_orders = get_orders(token_id, "offer", "ASC")
+        sql = """
+        INSERT INTO trades (bid_order_id,
+                            offer_order_id,
+                            buyer_id,
+                            seller_id,
+                            token_id,
+                            price,
+                            quantity) 
+        VALUES ({}, {}, {}, {}, {}, {}, {})
+        """.format(bid_order_id,
+                    offer_order_id,
+                    buyer_id,
+                    seller_id,
+                    token_id,
+                    price,
+                    quantity)
         
-        # only if there are outstanding orders is it parsed
-        if len(buy_orders) > 0 and len(sell_orders) > 0:
-            
-            # Format orders into dataframes and sort them in descending order
-            cols = ["id",
-                    "user_id",
-                    "token_id",
-                    "type",
-                    "price",
-                    "quantity"]
-            
-            buy_df = pd.DataFrame(buy_orders, columns=cols)
-            sell_df = pd.DataFrame(sell_orders, columns=cols)
+        cur.execute(sql)
+        
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+    except (Exception, psycopg2.Error) as e:
+        print("Error: ",e)
 
-            print(buy_df)
-            print(sell_df)
+def delete_order(order_id):
+    try: 
+        conn = psycopg2.connect(db_url, sslmode='require')
+    
+        cur = conn.cursor()
+        
+        sql = """
+        DELETE FROM orders WHERE id = {}
+        """.format(order_id)
+        
+        cur.execute(sql)
+        
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+    except (Exception, psycopg2.Error) as e:
+        print("Error: ",e)
+
+def update_order(order_id, amount_filled, filled = False):
+    try: 
+        conn = psycopg2.connect(db_url, sslmode='require')
+    
+        cur = conn.cursor()
+        
+        sql = """
+        UPDATE orders SET amount_filled = {}, filled = {} WHERE id = {}
+        """.format(amount_filled, filled, order_id)
+        
+        cur.execute(sql)
+        
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+
+    except (Exception, psycopg2.Error) as e:
+        print("Error: ",e)
+
+def match(token_id):
+    """
+    Parses over orders for a specific token and matches them until impossible.
+    """
+        
+    # try and work this better to see if there are available trades so I don't pull
+    # the entire order log
+    bid_orders = get_orders(token_id, "bid", "DESC")
+    offer_orders = get_orders(token_id, "offer", "ASC")
+    
+    # only if there are outstanding orders is it parsed
+    if len(bid_orders) > 0 and len(offer_orders) > 0:
+        
+        # Format bids so they can be iterrated over as the 'static list'
+        cols = ["id",
+                "user_id",
+                "token_id",
+                "type",
+                "price",
+                "quantity",
+                "filled",
+                "amount_filled"]
+        bid_df = pd.DataFrame(bid_orders, columns=cols)
+        
+        # Process from the highest bid until matches are exhausted
+        # df's already sorted so first row is highest bid / lowest offer
+        # bids are static, only offers are manipulated
+        for bid in bid_df.iterrows():
             
-            # Process from the bid side until all trades are matched
-            for i in range(len(buy_df)):
-                # highest bid of the orderbook
-                highest_bid = buy_df.loc[0]
+            # select the row from the tuple returned by iterrows
+            bid = bid[1]
+
+            # pulls latest list of offer_orders (per iteration)
+            offer_orders = get_orders(token_id, "offer", "ASC")
+            offer_df = pd.DataFrame(offer_orders, columns=cols)
+            
+            print("\n"*2)
+            print("Handling Bid: ",bid["id"])
+            
+            # checks if there are offers left
+            if not offer_df.empty:
+                lowest_offer = offer_df.loc[0]
+            else:
+                print("No more valid offers")
+                break
+            
+            # stop parsing if bids are lower than offers
+            if bid["price"] < lowest_offer["price"]:
+                print("Bids too low")
+                break
+            
+            # amount needed to close bid
+            bid_unfilled = bid["quantity"] - bid["amount_filled"]
+
+            # building the trade order(s) for this bid
+            for offer in offer_df.iterrows():
                 
-                # all orders with an ask price lower than the highest bid
-                df = sell_df.loc[highest_bid["price"] > sell_df["price"]]
-                
-                # if prices don't line up, can't be matched and process ends
-                if df.empty:
-                    print("Orders cannot be settled (price).")
-                
-                # building the trade order(s) for this bid
-                settle_amount = highest_bid["quantity"]
-                
-                for sell_order in sell_df.iterrows():
-                    print(sell_order)
+                # select row from tuple returned by iterrows
+                offer = offer[1]
+
+                # fill available through this offer
+                offer_unfilled = offer["quantity"] - offer["amount_filled"]
+
+                # the sell order is fully consumed
+                if bid_unfilled - offer_unfilled > 0:
                     
-                    # the sell order is fully consumed
-                    if settle_amount - sell_order["quantity"] > 0:
-                        settle_amount -= sell_order["quantity"]
-                        
-                        submit_trade()
-                        delete_order()
+                    # how much of bid is left over
+                    # carried over to next offer iteration until bid closed
+                    bid_unfilled -= offer_unfilled
                     
-                    # the bid order is filled
-                    elif settle_amount - sell_order["quantity"] < 0:
-                        sell_order["quantity"] -= settle_amount
+                    # building the trade
+                    bid_order_id = bid["id"]
+                    offer_order_id = offer["id"]
+                    buyer_id = bid["user_id"]
+                    seller_id = offer["user_id"]
+                    token_id = offer["token_id"]
+                    price = offer["price"] # check how this works might need to be based on bid price
+                    quantity = offer_unfilled
+                    
+                    # submit trade
+                    submit_trade(bid_order_id,
+                                 offer_order_id,
+                                 buyer_id,
+                                 seller_id,
+                                 token_id,
+                                 price,
+                                 quantity)
+                    
+                    # update (close) offer
+                    amount_filled = offer["amount_filled"] + offer_unfilled
+                    update_order(offer["id"], offer["quantity"], filled = True)
+                    
+                # the bid order is filled
+                elif bid_unfilled - offer_unfilled <= 0:
+                    
+                    # how much of offer is left over
+                    offer_unfilled -= bid_unfilled
+                    
+                    # building the trade
+                    bid_order_id = bid["id"]
+                    offer_order_id = offer["id"]
+                    buyer_id = bid["user_id"]
+                    seller_id = offer["user_id"]
+                    token_id = bid["token_id"]
+                    price = offer["price"] # check how this works might need to be based on bid price
+                    quantity = bid_unfilled
+                    
+                    # submit trade
+                    submit_trade(bid_order_id,
+                                 offer_order_id,
+                                 buyer_id,
+                                 seller_id,
+                                 token_id,
+                                 price,
+                                 quantity)
+                    
+                    # update (close) bid
+                    amount_filled = bid["quantity"]
+                    update_order(bid["id"], amount_filled, filled = True)
+                    
+                    # sell order was fully consumed
+                    if offer_unfilled == 0:                        
+                        amount_filled = offer["amount_filled"] + bid_unfilled
+                        update_order(offer["id"], amount_filled, filled = True)
+                    
+                    # sell order was not fully consumed
+                    elif offer_unfilled > 0:                        
+                        amount_filled = offer["amount_filled"] + bid_unfilled
+                        update_order(offer["id"], amount_filled, filled = False)
                         
-                        # sell order was fully consumed
-                        if sell_order["quantity"] == 0:
-                             submit_trade()
-                             delete_order("buy order")
-                             delete_order("sell order")
-                        
-                        # sell order was not fully consumed
-                        else:
-                            update_order("sell order")
-                            
-                        submit_trade()
-                        delete_order("buy order")
+                    # sets outstanding fill to 0
+                    bid_unfilled = 0
+        
+            #offers did not satisfy bid
+            if bid_unfilled > 0:
+
+                amount_filled = bid["quantity"] - bid_unfilled             
+                update_order(bid["id"], amount_filled, filled = False)
 
         else:
             print("No outstanding settlement (volume).")
 
-
-def main():
-
-    try:
-        conn = psycopg2.connect(Config.DATABASE_URI, sslmode='require')
+def parse_all():
+    token_ids = get_token_ids()
     
-        cursor = conn.cursor()
+    print("*"*25)
+    print("Starting parse")
+    print("*"*25)
+
+    for token_id in token_ids:
+        match(token_id)
         
-        sql_query = """
-        select * from users
-        """
-        
-        cursor.execute(sql_query)
-        
-        data = cursor.fetchall()
-        
-        for row in data:
-            print(row)
-    except (Exception, psycopg2.Error) as e:
-        print("Error fetching data: ",e)
-        
-    finally:
-        if conn:
-            cursor.close()
-            conn.close()
+    print("*"*25)
+    print("Parse ended")
+    print("*"*25)
+
             
 if __name__=="__main__":
-    parse()
+    parse_all()
