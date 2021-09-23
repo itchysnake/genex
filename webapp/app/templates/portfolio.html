@@ -4,18 +4,54 @@
 
 {% block content %}
 
+    <!-- Outstanding Orders --!>
     {% if orders %}
+        <h1> Outstanding orders </h1>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Token ID</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Token Page</th>
+            </tr>
+        <!-- Fills Table -->
         {% for order in orders %}
-            {{ order.id }}
-            {{ order.token_id }}
-            {{ order.direction }}
-            {{ order.quantity }}
-            <a href="{{ url_for('token', token_id=order.token_id) }}">Token Page</a>
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.token_id }}</td>
+                <td>{{ order.type }}</td>
+                <td>{{ order.quantity }}</td>
+                <td><a href="{{ url_for('token', token_id=order.token_id) }}">Link</a></td>
+            </tr>
         {% endfor %}
+        </table>
+    {% endif %}
+    
+    <!-- Owned Tokens -->
+    {% if not orders %}
+    <p> No orders placed, please place orders to view your portfolio. </p>
+    {% endif %}
+
+    {% if owned_tokens %}
+        <h1> Tokens Owned</h1>
+        <table>
+            <tr>
+                <th>Token ID</th>
+                <th>Quantity</th>
+                <th>Token Page</th>
+            </tr>
+        <!-- Fills Table -->
+        {% for token in owned_tokens %}
+            <td>{{ token.token_id }}</td>
+            <td>{{ token.quantity }}</td>
+            <td><a href="{{ url_for('token', token_id=token.token_id) }}">Link</a></td>
+        {% endfor %}
+        </table>
     {% endif %}
     
     {% if not orders %}
-    <p> No orders placed, please place orders to view your portfolio. </p>
+    <p> No trades completed. </p>
     {% endif %}
 
 {% endblock %}

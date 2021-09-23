@@ -3,7 +3,7 @@ import psycopg2
 
 db_url = Config.SQLALCHEMY_DATABASE_URI
 
-def create_user():
+def create_users():
     try:
         conn = psycopg2.connect(db_url, sslmode='require')
         
@@ -11,12 +11,16 @@ def create_user():
         
         # Create user
         user1 = ("bailey","password")
+        user2 = ("pedro","password")
         
-        sql = """
-        INSERT INTO users (username, password) VALUES {}
-        """.format(user1)
+        users = [user1,user2]
         
-        cur.execute(sql)
+        for user in users:
+            sql = """
+            INSERT INTO users (username, password) VALUES {}
+            """.format(user)
+            cur.execute(sql)
+            
         conn.commit()
         
         cur.close()
@@ -38,6 +42,15 @@ def create_token():
         """.format(token1)
         
         cur.execute(sql)
+        
+        # Update ownership
+        owner = (1, 1, 1000)
+        sql = """
+        INSERT INTO ownership (user_id, token_id, quantity) VALUES {}
+        """.format(owner)
+        
+        cur.execute(sql)
+        
         conn.commit()
         
         cur.close()
@@ -51,14 +64,15 @@ def test_orders():
     
         cur = conn.cursor()        
         
-        # Create orders
-        order1 = (1, 1, "bid", 12, 10, False, 0)
-        order2 = (1, 1, "offer", 8, 7, False, 0)
-        order3 = (1, 1, "bid", 8, 5, False, 0)
-        order4 = (1, 1, "offer", 7, 5, False, 0)
-        order5 = (1, 1, "bid", 5, 25, False, 0)
+        # Bailey sell orders
+        order1 = (1, 1, "offer", 12, 10, False, 0)
+        order2 = (1, 1, "offer", 8, 5, False, 0)
         
-        orders = [order1, order2, order3, order4, order5]
+        # Pedro bid orders
+        order3 = (2, 1, "bid", 14, 5, False, 0)
+        order4 = (2, 1, "bid", 9, 7, False, 0)
+        
+        orders = [order1, order2, order3, order4]
         
         for order in orders:
             sql = """
@@ -76,7 +90,7 @@ def test_orders():
         print("Error: ",e)
         
 def main():
-    create_user()
+    create_users()
     create_token()
     test_orders()
     

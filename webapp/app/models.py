@@ -19,7 +19,9 @@ class User(UserMixin, db.Model):
     # one-to-many > User.orders.<col>
     order = db.relationship("Order", backref="user")
     # one-to-many > User.trades.<col>
-    trade = db.relationship("Trade", backref="user")
+    # trade = db.relationship("Trade", backref="user") <-- DELETE
+    # one-to-many > User.ownership
+    ownership = db.relationship("Ownership", backref="user")
     
 class Token(db.Model):
     """
@@ -34,9 +36,11 @@ class Token(db.Model):
     total_supply = db.Column(db.Integer(), nullable = False)
 
     # one-to-many > Token.orders.<col>
-    order = db.relationship("Order", backref="token", cascade = "all,delete")
+    order = db.relationship("Order", backref="token")
     # one-to-many > Token.trades.<col>
     trade = db.relationship("Trade", backref="token")
+    # one-to-many > Token.ownership.
+    ownership = db.relationship("Ownership", backref="token")
     
 class Order(db.Model):
     """
@@ -68,5 +72,18 @@ class Trade(db.Model):
     price = db.Column(db.Float(4), nullable = False)
     quantity = db.Column(db.Integer, nullable = False)
     
-    # one-to-many > Trade.orders.<col>
-    order = db.relationship("Order", backref="trade", cascade = "all,delete")
+    # Allowing multiple foreign keys
+    buyer = db.relationship("User", foreign_keys=[buyer_id])
+    seller = db.relationship("User", foreign_keys=[seller_id])
+    
+    # Building the foreign keys
+    bid_order = db.relationship("Order", foreign_keys =[bid_order_id])
+    offer_order = db.relationship("Order", foreign_keys=[offer_order_id])
+    
+class Ownership(db.Model):
+    """
+    """
+    __tablename__ = "ownership"
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False, primary_key = True)
+    token_id = db.Column(db.Integer, db.ForeignKey("tokens.id"), nullable = False)
+    quantity = db.Column(db.Integer)

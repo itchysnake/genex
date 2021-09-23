@@ -1,11 +1,14 @@
 # App dependancies
 from app import app, forms
-from app.models import db, User, Token, Order
+# Database
+from app.models import db, User, Token, Order, Trade, Ownership
+#from flask_sqlalchemy import or_, and_
 # Flask-general
 from flask import render_template, redirect, url_for, flash
 from flask_login import login_user, current_user, login_required, logout_user
 # Password encryption
 from passlib.hash import pbkdf2_sha256
+
 
 # HOME
 @app.route("/", methods=["GET", "POST"])
@@ -62,11 +65,16 @@ def token(token_id):
 @login_required
 def portfolio():
     
-    # Pull all current user orders
-    orders = Order.query.filter_by(user_id = current_user.id).all()
+    # Pull all unfilled user orders
+    orders = Order.query.filter_by(user_id = current_user.id,
+                                            filled = False).all()
+    
+    # Pull all closed trades
+    owned_tokens = Ownership.query.filter_by(user_id = current_user.id).all()
     
     return render_template("portfolio.html",
-                           orders = orders)
+                           orders = orders,
+                           owned_tokens = owned_tokens)
 
 # ISSUER CONTROLS
 @app.route("/issuer", methods=["GET","POST"])
@@ -83,7 +91,7 @@ def issuer():
         
     if issuer_form.validate_on_submit():
 
-        # add to DB
+        # Add Token to DB
         token_name = issuer_form.token_name.data
         token_symbol = issuer_form.token_symbol.data
         total_supply = issuer_form.total_supply.data
@@ -93,8 +101,15 @@ def issuer():
                       symbol = token_symbol,
                       total_supply = total_supply)
         
-        
         db.session.add(token)
+        db.session.commit()
+        
+        # Set owner of initial supply
+        ownership = Ownership(user_id = current_user.id,
+                               token_id = current_user.token.id,
+                               quantity = total_supply)
+    
+        db.session.add(ownership)
         db.session.commit()
         
         # Flash feedback
@@ -102,7 +117,7 @@ def issuer():
         
         return redirect(url_for("index"))
     
-    return render_template("issuer.html", form = issuer_form)
+    return render_template("issuer.html",form = issuer_form)
 
 # AUTHORISATION
 @app.route("/register", methods=["GET","POST"])
@@ -114,13 +129,13 @@ def register():
     # Redirect to login upon registration
     if reg_form.validate_on_submit():
         
-        # Prep data for DB
+        # Save user to DB
         username = reg_form.username.data        
         hashed_pwd = pbkdf2_sha256.hash(reg_form.password.data)
         
-        # Save to DB
         user = User(username = username,
                     password = hashed_pwd)
+        
         db.session.add(user)
         db.session.commit()
         

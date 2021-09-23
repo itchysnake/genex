@@ -36,6 +36,7 @@ class Db:
         except (Exception, psycopg2.Error) as e:
             print("Error fetching data: ",e)
             
+
     def get_orders(self, token_id, type, sort_by, filled = False):
         """
         Gets filled or unfilled orders for a specific ID, direction and sorts
@@ -72,7 +73,7 @@ class Db:
             return orders
         
         except (Exception, psycopg2.Error) as e:
-            print("Error fetching data: ",e)    
+            print("Error fetching data: ",e)
     
     def submit_trade(self, bid_order_id, offer_order_id, buyer_id, seller_id, token_id, price, quantity):
         """
@@ -172,7 +173,52 @@ class Db:
     
         except (Exception, psycopg2.Error) as e:
             print("Error: ",e)
-
+            
+    def update_ownership(self, user_id, token_id, quantity):
+        
+        try:
+            conn = psycopg2.connect(self.db_url, sslmode='require')
+        
+            cur = conn.cursor()
+            
+            # Get current ownership
+            sql = """
+            SELECT quantity FROM ownership WHERE user_id = {} AND token_id = {}
+            """.format(user_id, token_id)
+            
+            cur.execute(sql)
+            
+            current_amount = cur.fetchone()
+            
+            # If this is his first trade of the asset
+            if current_amount is None:
+                sql = """
+                INSERT INTO ownership (user_id, token_id, quantity) 
+                VALUES ({}, {}, {}) 
+                """.format(user_id, token_id, quantity)
+                
+                cur.execute(sql)
+                cur.close()
+            
+            # Update ownership
+            else:
+                # select first tuple returned by sql lookup
+                current_amount = current_amount[0]
+                new_amount = current_amount + quantity
+                
+                sql = """
+                UPDATE ownership SET quantity = {} WHERE user_id = {} AND token_id = {}
+                """.format(new_amount, user_id, token_id)
+            
+                cur.execute(sql)
+                cur.close()
+                
+            conn.commit()
+            conn.close()
+        
+        except (Exception, psycopg2.Error) as e:
+            print("Error updating ownership: ",e)
+            
 class Parse:
     def __init__(self):
         self.db = Db()
@@ -248,9 +294,14 @@ class Parse:
     
                     # fill available through this offer
                     offer_unfilled = offer["quantity"] - offer["amount_filled"]
+                    
+                    # if bid is filled, break looking for offers
+                    if bid_unfilled == 0:
+                        break
     
                     # the sell order is fully consumed
                     if bid_unfilled - offer_unfilled > 0:
+                        print("Bid is underfilled!")
                         
                         # how much of bid is left over
                         # carried over to next offer iteration until bid closed
@@ -266,21 +317,67 @@ class Parse:
                         quantity = offer_unfilled
                         
                         # submit trade
+                        print("Sell order fully conumsed: Submitting Trade!")
                         self.db.submit_trade(bid_order_id,
-                                     offer_order_id,
-                                     buyer_id,
-                                     seller_id,
-                                     token_id,
-                                     price,
-                                     quantity)
+                                             offer_order_id,
+                                             buyer_id,
+                                             seller_id,
+                                             token_id,
+                                             price,
+                                             quantity)
                         
                         # update (close) offer
                         amount_filled = offer["amount_filled"] + offer_unfilled
                         self.db.update_order(offer["id"], offer["quantity"], filled = True)
                         
-                    # the bid order is filled
-                    elif bid_unfilled - offer_unfilled <= 0:
+                        # update ownership
+                        print("Updating ownership")
+                        self.db.update_ownership(seller_id, token_id, -quantity)
+                        self.db.update_ownership(buyer_id, token_id, quantity)
                         
+                    # the bid order is perfectly filled
+                    elif bid_unfilled - offer_unfilled == 0:
+                        print("Bid is perfectly filled!")
+                        # building the trade
+                        bid_order_id = bid["id"]
+                        offer_order_id = offer["id"]
+                        buyer_id = bid["user_id"]
+                        seller_id = offer["user_id"]
+                        token_id = bid["token_id"]
+                        price = offer["price"]
+                        quantity = bid_unfilled
+                        
+                        # submit trade
+                        self.db.submit_trade(bid_order_id,
+                                             offer_order_id,
+                                             buyer_id,
+                                             seller_id,
+                                             token_id,
+                                             price,
+                                             quantity)
+                        
+                        # update (close) offer
+                        amount_filled = offer["amount_filled"] + offer_unfilled
+                        self.db.update_order(offer["id"], offer["quantity"], filled = True)
+
+                        # update (close) both orders
+                        amount_filled = bid["quantity"]
+                        self.db.update_order(bid["id"], amount_filled, filled = True)
+                        
+                        #amount_filled = offer["amount_filled"] + bid_unfilled
+                        #self.db.update_order(offer["id"], amount_filled, filled = True)
+                        
+                        # update ownership
+                        self.db.update_ownership(seller_id, token_id, -quantity)
+                        self.db.update_ownership(buyer_id, token_id, quantity)
+                        
+                        # breaks iteration
+                        bid_unfilled = 0
+                        break
+                    
+                    # the bid order is overfilled
+                    elif bid_unfilled - offer_unfilled < 0:
+                        print("Bid is overfilled!")
                         # how much of offer is left over
                         offer_unfilled -= bid_unfilled
                         
@@ -306,18 +403,18 @@ class Parse:
                         amount_filled = bid["quantity"]
                         self.db.update_order(bid["id"], amount_filled, filled = True)
                         
-                        # sell order was fully consumed
-                        if offer_unfilled == 0:                        
-                            amount_filled = offer["amount_filled"] + bid_unfilled
-                            self.db.update_order(offer["id"], amount_filled, filled = True)
+                        # update ownership
+                        print("Updating ownership")
+                        self.db.update_ownership(seller_id, token_id, -quantity)
+                        self.db.update_ownership(buyer_id, token_id, quantity)
                         
                         # sell order was not fully consumed
-                        elif offer_unfilled > 0:                        
-                            amount_filled = offer["amount_filled"] + bid_unfilled
-                            self.db.update_order(offer["id"], amount_filled, filled = False)
+                        amount_filled = offer["amount_filled"] + bid_unfilled
+                        self.db.update_order(offer["id"], amount_filled, filled = False)
                             
-                        # sets outstanding fill to 0
+                        # breaks iteration
                         bid_unfilled = 0
+                        break
             
                 #offers did not satisfy bid
                 if bid_unfilled > 0:
@@ -328,7 +425,7 @@ class Parse:
             else:
                 print("No outstanding settlement (volume).")
 
-    def parse_all(self):
+    def main(self):
         """
         Iterates over all token IDs in "tokens" table, and applies matching
         logic to settle outstanding orders.
@@ -352,6 +449,5 @@ class Parse:
         print("Parse ended")
         print("*"*25)
 
-            
 if __name__=="__main__":
-    Parse().parse_all()
+    Parse().main()
