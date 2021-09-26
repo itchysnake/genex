@@ -1,7 +1,7 @@
 # Creation of FlaskForm
 from flask_wtf import FlaskForm
 # Fields for FlaskForm
-from wtforms import (StringField, IntegerField, PasswordField, BooleanField, SubmitField, RadioField)
+from wtforms import (StringField, IntegerField, DecimalField, PasswordField, BooleanField, SubmitField, RadioField)
 # Validators
 from wtforms.validators import (InputRequired, Length, EqualTo, NumberRange, ValidationError, Required)
 from app.customValidators import (uname_avail, uname_valid, pwd_valid, token_name_avail,
@@ -52,7 +52,8 @@ class IssuerForm(FlaskForm):
     submit = SubmitField("Issue")
     
 class TokenOrder(FlaskForm):
-    price = IntegerField(label = "Price",
+    price = DecimalField(label = "Price",
+                         places=2,
                          validators = [InputRequired("Quantity required")])
     
     type = RadioField(label = "Type",

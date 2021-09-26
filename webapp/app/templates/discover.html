@@ -4,11 +4,23 @@
 
 {% block content %}
 
-    {% for token in tokens %}
-        {{ token.name }}
-        {{ token.symbol }}
-        {{ token.totalSupply }}
-        <a href="{{ url_for('token', token_id=token.id) }}">Token Page</a>
-    {% endfor %}
+    <!-- Tokens -->
+    <h1> Listed Tokens </h1>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Symbol</th>
+                <th>Total Supply</th>
+                <th>Token Page</th>
+            </tr>
+            {% for token in tokens %}
+            <tr>
+                <td>{{ token.name }}</td>
+                <td>{{ token.symbol }}</td>
+                <td>{{ token.total_supply }}</td>
+                <td><a href="{{ url_for('token', token_id=token.id) }}">Token Page</a></td>
+            </tr>
+            {% endfor %}
+        </table>
 
 {% endblock %}
