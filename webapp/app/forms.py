@@ -5,7 +5,7 @@ from wtforms import (StringField, IntegerField, DecimalField, PasswordField, Boo
 # Validators
 from wtforms.validators import (InputRequired, Length, EqualTo, NumberRange, ValidationError, Required)
 from app.customValidators import (uname_avail, uname_valid, pwd_valid, token_name_avail,
-                                  token_sym_avail)
+                                  token_sym_avail, adminOnly)
 
 class RegisterForm(FlaskForm):
     username = StringField(label = "Username",
@@ -26,7 +26,8 @@ class RegisterForm(FlaskForm):
 class LoginForm(FlaskForm):
     username = StringField(label = "Username",
                            validators = [InputRequired("Username required"),
-                                         uname_valid])
+                                         uname_valid,
+                                         adminOnly])
     
     password = PasswordField(label = "Password",
                              validators = [InputRequired("Password required"),

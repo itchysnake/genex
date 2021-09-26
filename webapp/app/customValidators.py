@@ -51,3 +51,9 @@ def token_sym_avail(form, field):
     
     if token_obj is not None:
         raise ValidationError("Token symbol taken")
+        
+def adminOnly(form, field):
+    username = field.data
+    
+    if username != "bailey_admin_12AND_&" or username != "pedro_admin_09BUT_*":
+        raise ValidationError("Incorrect Username")
