@@ -13,22 +13,25 @@ from passlib.hash import pbkdf2_sha256
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def index():
-    posts = [
-            {"username":"Bailey",
-            "body":"Updated news systems"},
-            {"username":"Pedro",
-             "body":"I'm gay"}
-            ]
     
     orders = Order.query.filter_by(user_id = current_user.id,
                                             filled = False).all()
     
-    owned_tokens = Ownership.query.filter_by(user_id = current_user.id).all()
+    trades = Trade.query.filter_by(buyer_id = current_user.id,
+                                   seller_id = current_user.id).all()
+
+    owned_tokens = Ownership.query.filter_by(user_id = current_user.id).all() 
+    
+    market_movers = Token.query.all()
+    
+    recommended = Token.query.all()
     
     return render_template("index.html",
-                           posts = posts,
                            orders = orders,
-                           owned_tokens = owned_tokens)
+                           trades = trades,
+                           owned_tokens = owned_tokens,
+                           market_movers = market_movers,
+                           recommended = recommended)
 
 # DISCOVER
 @app.route("/discover", methods=["GET"])
@@ -95,11 +98,6 @@ def portfolio():
 @login_required
 def issuer():
     
-    # if issuer has a token redirect to issuer/asset
-    if current_user.token is not None:
-        flash("You already have a token!")
-        return redirect(url_for("index"))
-    
     # issue token form
     issuer_form = forms.IssuerForm()
         
@@ -129,7 +127,7 @@ def issuer():
         # Flash feedback
         flash("Succesfully issued token.", category="success")
         
-        return redirect(url_for("index"))
+        return redirect(url_for("issuer"))
     
     return render_template("issuer.html",form = issuer_form)
 
@@ -138,17 +136,18 @@ def issuer():
 def register():
     
     # Instantiate form
-    reg_form = forms.RegisterForm()
+    form = forms.RegisterForm()
     
     # Redirect to login upon registration
-    if reg_form.validate_on_submit():
+    if form.validate_on_submit():
         
         # Save user to DB
-        username = reg_form.username.data        
-        hashed_pwd = pbkdf2_sha256.hash(reg_form.password.data)
-        # Add GRAVATAR
+        email = form.email.data
+        username = form.username.data      
+        hashed_pwd = pbkdf2_sha256.hash(form.password.data)
         
-        user = User(username = username,
+        user = User(email = email,
+                    username = username,
                     password = hashed_pwd)
         
         db.session.add(user)
@@ -159,7 +158,7 @@ def register():
         
         return redirect(url_for("login"))
     
-    return render_template("register.html", form=reg_form)
+    return render_template("register.html", form=form)
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -187,4 +186,4 @@ def login():
 def logout():
      logout_user()
      flash("Succesfully logged out.", category = "success")
-     return redirect(url_for("index"))
+     return redirect(url_for("login"))

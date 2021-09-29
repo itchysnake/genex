@@ -1,34 +1,72 @@
-{% extends "base.html" %}
+<!Doctype html>
 
-{% block title %}Login{% endblock %}
-
-{% block content %}
-
-    <h1>Login</h1>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    <form action="{{ url_for('login') }}", method="POST">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://www.w3schools.com/lib/w3.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-        <div class="form-field">
-            {{ form.username.label }}
-            {{ form.username }}
-            {% for error in form.username.errors %}
-                <li>{{error}}</li>
-            {% endfor %}
-        </div>
+        <title>GENEX | Login</title>
+    </head>
+    <body>
+        <section class="w3-padding-large">
 
-        <div class="form-field">
-            {{ form.password.label }}
-            {{ form.password }}
-            {% for error in form.password.errors %}
-                <li>{{error}}</li>
-            {% endfor %}
-        </div>
+            <!-- Central Container -->
+            <div class="w3-container w3-display-middle w3-padding-large">
+                <div class="w3-center">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                        <div class="w3-row w3-padding-large">
+                            {% for message in messages %}
+                                <div class="w3-panel w3-pale-blue w3-leftbar w3-rightbar w3-border-blue">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    {% endwith %}
+                    <img style="width:200px;" src="{{ url_for('static', filename='/img/genex_spin.gif') }}"></img>
+                </div>
+                <br>
+                <form action="{{ url_for('login') }}", method="POST">
 
-        {{ form.submit }}
-        
-        <!-- CSRF protection -->
-        {{ form.csrf_token  }}
-        
-    </form>
+                    <!-- Username -->
+                    <div class="form-field"> 
+                        <div class="w3-container">{{ form.username(class="w3-border-0 w3-padding-medium w3-xlarge w3-text-black w3-round-xlarge w3-light-grey w3-center") }}</div>
+                        {% for error in form.username.errors %}
+                            <div class="w3-panel w3-center w3-padding w3-pale-red w3-leftbar w3-rightbar w3-border-red">{{error}}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <br>
+                    
+                    <!-- Password -->
+                    <div class="form-field">
+                        <div class="w3-container">{{ form.password(class="w3-border-0 w3-padding-medium w3-xlarge w3-text-black w3-round-xlarge w3-light-grey w3-center") }}</div>
+                        {% for error in form.password.errors %}
+                            <div class="w3-panel w3-center w3-padding w3-pale-red w3-leftbar w3-rightbar w3-border-red">{{error}}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <br>
+                    
+                    <div class="w3-row">
+                        <div class="w3-col s6 w3-center">
+                            <a class="w3-button w3-padding-large w3-round-xxlarge w3-hover-blue w3-border w3-white w3-border-blue" style="width:120px;" href="{{ url_for('register') }}">Register</a>
+                        </div>
+                        <div class="w3-col s6 w3-center">
+                            {{ form.submit(class="w3-button w3-padding-large w3-round-xxlarge w3-hover-blue  w3-border w3-white w3-border-blue", style="width:120px;") }}
+                        </div>
+                    </div>
+                    <!-- CSRF protection -->
+                    {{ form.csrf_token  }}
 
-{% endblock %}
+                </form>
+                
+            </div>
+        </section>
+    </body>
+</html>

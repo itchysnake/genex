@@ -1,37 +1,47 @@
 # Creation of FlaskForm
 from flask_wtf import FlaskForm
 # Fields for FlaskForm
-from wtforms import (StringField, IntegerField, DecimalField, PasswordField, BooleanField, SubmitField, RadioField)
+from wtforms import (StringField, IntegerField, DecimalField, PasswordField, 
+                     BooleanField, SubmitField, RadioField)
 # Validators
 from wtforms.validators import (InputRequired, Length, EqualTo, NumberRange, ValidationError, Required)
 from app.customValidators import (uname_avail, uname_valid, pwd_valid, token_name_avail,
-                                  token_sym_avail, adminOnly)
+                                  token_sym_avail, email_valid)
 
 class RegisterForm(FlaskForm):
+    email = StringField(label = "Email",
+                       validators = [InputRequired("Email Required"),
+                                     email_valid],
+                       render_kw={"placeholder": "email"})
+    
     username = StringField(label = "Username",
                            validators = [InputRequired("Username required"),
                                          Length(min = 4, message = "Longer than 4 chars"),
-                                         uname_avail])
+                                         uname_avail],
+                           render_kw={"placeholder": "username"})
     
     password = PasswordField(label = "Password",
                              validators = [InputRequired("Password required"),
-                                         Length(min = 4, message = "Longer than 4 chars")])
+                                         Length(min = 4, message = "Longer than 4 chars")],
+                             render_kw={"placeholder": "password"})
     
     confirm_pwd = PasswordField(label = "Repeat Password",
                                 validators = [InputRequired("Password required"),
-                                              EqualTo("password","Passwords must match")])
+                                              EqualTo("password","Passwords must match")],
+                                render_kw={"placeholder": "confirm password"})
     
     submit = SubmitField("Register")
     
 class LoginForm(FlaskForm):
     username = StringField(label = "Username",
                            validators = [InputRequired("Username required"),
-                                         uname_valid,
-                                         adminOnly])
+                                         uname_valid],
+                           render_kw={"placeholder": "username"})
     
     password = PasswordField(label = "Password",
                              validators = [InputRequired("Password required"),
-                                           pwd_valid])
+                                           pwd_valid],
+                             render_kw={"placeholder": "password"})
     
     submit = SubmitField("Login")
     

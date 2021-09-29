@@ -2,6 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 # Manages user session
 from flask_login import UserMixin
 import datetime
+# Encryption
+import hashlib
 
 db = SQLAlchemy()
 
@@ -15,7 +17,8 @@ class User(UserMixin, db.Model):
     timestamp = db.Column(db.DateTime, nullable = False)
     username = db.Column(db.String(), unique=True, nullable = False)
     password = db.Column(db.String(), nullable = False)
-    # Add GRAVATAR
+    email = db.Column(db.String(), unique = True, nullable = False)
+    gravatar = db.Column(db.String(), unique = True)
     
     # one-to-one > User.token.<col>
     token = db.relationship("Token", backref="user", lazy=True, uselist=False)
@@ -26,10 +29,12 @@ class User(UserMixin, db.Model):
     # one-to-many > User.ownership
     ownership = db.relationship("Ownership", backref="user")
     
-    def __init__(self, username, password):
+    def __init__(self, username, password, email):
         self.timestamp = datetime.datetime.utcnow()
         self.username = username
         self.password = password
+        self.email = email
+        self.gravatar = "https://www.gravatar.com/avatar/"+hashlib.md5(email.lower().encode('utf-8')).hexdigest()+"?d=retro"
     
 class Token(db.Model):
     """
