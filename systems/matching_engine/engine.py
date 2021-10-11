@@ -1,6 +1,7 @@
 from db import Db
 import pandas as pd
 import datetime
+from system import quotes
            
 class Parse:
     def __init__(self):
@@ -111,6 +112,9 @@ class Parse:
                         # update ownership
                         self.db.update_ownership(seller_id, token_id, -quantity)
                         self.db.update_ownership(buyer_id, token_id, quantity)
+                        
+                        # update quotes
+                        quotes.
                         
                     # the bid order is perfectly filled
                     elif bid_unfilled - offer_unfilled == 0:

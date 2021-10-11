@@ -22,7 +22,8 @@ def index():
 
     owned_tokens = Ownership.query.filter_by(user_id = current_user.id).all() 
     
-    market_movers = Token.query.all()
+    market_movers = {}
+        
     
     recommended = Token.query.all()
     

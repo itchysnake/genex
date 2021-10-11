@@ -1,98 +1,64 @@
 from config import Config
 import psycopg2
+from flask_sqlalchemy import SQLAlchemy
+from flask import Flask
+# Database
+from app.models import db, User, Token, Order, Trade, Ownership
 
-db_url = Config.SQLALCHEMY_DATABASE_URI
+# Initialise app
+app = Flask(__name__)
+
+# Gives access to required keys
+app.config.from_object(Config)
+
+# Configure DB
+db = SQLAlchemy(app)
 
 def create_users():
-    try:
-        conn = psycopg2.connect(db_url, sslmode='require')
-        
-        cur = conn.cursor()
-        
-        # Create user
-        user1 = ("bailey","password")
-        user2 = ("pedro","password")
-        
-        users = [user1,user2]
-        
-        for user in users:
-            sql = """
-            INSERT INTO users (username, password) VALUES {}
-            """.format(user)
-            cur.execute(sql)
-            
-        conn.commit()
-        
-        cur.close()
-        conn.close()
-    except (Exception, psycopg2.Error) as e:
-        print("Error: ",e)
     
-def create_token():
-    try:
-        conn = psycopg2.connect(db_url, sslmode='require')
-        
-        cur = conn.cursor()
-        
-        # Create token
-        token1 = (1,"bailey_token", "BDVT",1000)
-        
-        sql = """
-        INSERT INTO tokens (user_id, name, symbol, total_supply) VALUES {}
-        """.format(token1)
-        
-        cur.execute(sql)
-        
-        # Update ownership
-        owner = (1, 1, 1000)
-        sql = """
-        INSERT INTO ownership (user_id, token_id, quantity) VALUES {}
-        """.format(owner)
-        
-        cur.execute(sql)
-        
-        conn.commit()
-        
-        cur.close()
-        conn.close()
-    except (Exception, psycopg2.Error) as e:
-        print("Error: ",e)
+    user1 = User("bailey", "password", "bailey@gmail.com")
+    user2 = User("pedro","password","pedro@gmail.com")
+    
+    db.session.add(user1)
+    db.session.add(user2)
+    
+    db.session.commit()
+    
+def create_tokens():
+    token1 = Token(1,"Bailey Token","BDVT",10000, "Developer","Nerd")
+    token2 = Token(2,"Pedro Token","PDST",1000, "Comedian","Crack Addict")
+    
+    db.session.add(token1)
+    db.session.add(token2)
+    
+    db.session.commit()
 
 def test_orders():
-    try: 
-        conn = psycopg2.connect(db_url, sslmode='require')
+    # Bailey's Token Spread
+    # 1 Trade of 15 for $10
+    # 1 order outstanding of 10 offers (sell pressure)
+    order1 = Order(1,1,"offer",10,25)
+    order2 = Order(2,1,"bid",11,15)
+    order3 = Order(2,1,"bid",10,5)
     
-        cur = conn.cursor()        
-        
-        # Bailey sell orders
-        order1 = (1, 1, "offer", 12, 10, False, 0)
-        order2 = (1, 1, "offer", 8, 5, False, 0)
-        
-        # Pedro bid orders
-        order3 = (2, 1, "bid", 14, 5, False, 0)
-        order4 = (2, 1, "bid", 9, 7, False, 0)
-        
-        orders = [order1, order2, order3, order4]
-        
-        for order in orders:
-            sql = """
-            INSERT INTO orders (user_id, token_id, type, price, quantity, filled, amount_filled) 
-            VALUES {}
-            """.format(order)
-        
-            cur.execute(sql)
-            
-            conn.commit()
-        
-        cur.close()
-        conn.close()
-    except (Exception, psycopg2.Error) as e:
-        print("Error: ",e)
-        
+    # Pedro's Token Spread
+    # No trades but 50/50 and buying pressure
+    order3 = Order(2,2,"offer",15,35)
+    order4 = Order(1, 2, "bid",13, 40)
+    
+    db.session.add(order1)
+    db.session.add(order2)
+    db.session.add(order3)
+    db.session.add(order4)
+    db.session.commit()
+
+# Create tables
 def main():
-    create_users()
-    create_token()
-    test_orders()
-    
+    with app.app_context():
+        create_users()
+        create_tokens()
+        test_orders()
+
+# Run main() then closes app
 if __name__=="__main__":
     main()
