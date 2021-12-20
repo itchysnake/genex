@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.7;
 
-import {GNXToken} from "./tokens/GNXToken.sol";
-import {GNXNative} from "./tokens/GNXNative.sol";
+import {GNXToken} from "../tokens/GNXToken.sol";
+import {GNXNative} from "../tokens/GNXNative.sol";
 import {GNXPoolFactory} from "./GNXPoolFactory.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
