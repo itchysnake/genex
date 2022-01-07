@@ -1,0 +1,7 @@
+__pycache__
+.env
+.history
+.hypothesis/
+tests.json
+deploy.py
+*_test.py
