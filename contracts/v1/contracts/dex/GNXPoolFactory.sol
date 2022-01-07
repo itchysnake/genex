@@ -67,5 +67,4 @@ contract GNXPoolFactory is IGNXPoolFactory, AccessControlUpgradeable {
     function getPool(address GNXTokenAddress) public override view returns (address) {
         return tokenToPool[GNXTokenAddress];
     }
-    
 }
