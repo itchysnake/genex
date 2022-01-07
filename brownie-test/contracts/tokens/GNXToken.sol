@@ -60,7 +60,7 @@ contract GNXToken is
     // Issuer's address
     address public override (IGNXToken) issuer;
 
-   /* Creates new GNX Token
+  /** Creates new GNX Token
     * 
     * @notice Creation of GNX Token. Called by GNX Token Factory to create
     * proxies.
@@ -108,7 +108,7 @@ contract GNXToken is
         return true;
     }
 
-   /* UUPS compliant by adding access control (onlyRole)
+  /**  UUPS compliant by adding access control (onlyRole)
     * 
     * @notice Refer to ERC1967Proxy, UUPSUpgradeable, TransparentUpgradeableProxy.
     * 
@@ -124,7 +124,7 @@ contract GNXToken is
         onlyRole(DEFAULT_ADMIN_ROLE) {
     }
 
-   /* Mints new GNXTokens to recipient
+  /** Mints new GNXTokens to recipient
     *
     * @notice Only accessible to ROLE_MINTER
     *
@@ -138,7 +138,7 @@ contract GNXToken is
         return true;
     }
 
-   /* Burns existing GNXTokens from address
+  /** Burns existing GNXTokens from address
     *
     * @notice Only accessible to ROLE_MINTER
     *

@@ -11,5 +11,3 @@ def test_native():
     # accounts [0] is minter
     contract.mint(accounts[0], 1, {'from': accounts[0]})
     assert contract.balanceOf(accounts[0]) == (10**9)+1
-
-def 

@@ -15,7 +15,6 @@ import "@openzeppelin-upgradeable/contracts/proxy/utils/Initializable.sol";
   /**
     * @title ERC1363Upgradeable
     * @author Vittorio Minacori (https://github.com/vittominacori)
-    * @author GENEX
     * @dev Upgradeable verion of Vittorio Minacori's ERC1363 implementation
     */
 

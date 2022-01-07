@@ -30,7 +30,6 @@ interface IGNXPool {
     event Trade(address indexed trader, address output, uint256 inputAmount, uint256 outputAmount);
 }
 
-    // NOTE! make initialisable 
 contract GNXPool is ERC20, IGNXPool {
     
     GNXToken public token;                  // Wrapped GNXToken
@@ -46,42 +45,45 @@ contract GNXPool is ERC20, IGNXPool {
         factory = msg.sender;
     }
 
-    // View function for GNXToken reserve
-    // 
-    // @notice View function for GNXTokens stored in this contract
-    //
-    // @return Amount of GNXNative held in this contract
+  /** View function for GNXToken reserve
+    * 
+    * @notice View function for GNXTokens stored in this contract
+    *
+    * @return Amount of GNXNative held in this contract
+    */
     function tokenReserve() public override(IGNXPool) view returns(uint256){
         return token.balanceOf(address(this));
     }
     
-    // View function for GNXNative reserve
-    // 
-    // @notice View function for GNXNative stored in this contract.
-    //
-    // @return Amount of GNXNative held in this contract.
+  /** View function for GNXNative reserve
+    * 
+    * @notice View function for GNXNative stored in this contract.
+    *
+    * @return Amount of GNXNative held in this contract.
+    */
     function nativeReserve() public override(IGNXPool) view returns(uint256){
         return native.balanceOf(address(this));
     }
 
-    // Ability to add liquidity to the pool (mints LP tokens)
-    // 
-    // @notice Add liquidity of GNXToken and GNXNative to this trading pool. Users
-    // are rewarded in LP which can be exchanged for liquidity and trading accrued
-    // fees.
-    //
-    // @notice Liquidity of both tokens added must be equal. Technically only
-    // one param required but having two params for both tokens makes it clear
-    // that both are required to add liquidity.
-    //
-    // @dev ERC20 LP tokens are minted equal to the GNXNative deposit made.
-    // Required deposit amount must be calculated in front-end. Equal deposit
-    // is enforced by contract to prevent price manipulation.
-    //
-    // @param tokenDeposit Quantity of GNXToken deposited.
-    // @param nativeDeposit Quantity of GNXNative deposited.
-    //
-    // @return Quantity of LP tokens minted to msg.sender.
+  /** Ability to add liquidity to the pool (mints LP tokens)
+    * 
+    * @notice Add liquidity of GNXToken and GNXNative to this trading pool. Users
+    * are rewarded in LP which can be exchanged for liquidity and trading accrued
+    * fees.
+    *
+    * @notice Liquidity of both tokens added must be equal. Technically only
+    * one param required but having two params for both tokens makes it clear
+    * that both are required to add liquidity.
+    *
+    * @dev ERC20 LP tokens are minted equal to the GNXNative deposit made.
+    * Required deposit amount must be calculated in front-end. Equal deposit
+    * is enforced by contract to prevent price manipulation.
+    *
+    * @param tokenDeposit Quantity of GNXToken deposited.
+    * @param nativeDeposit Quantity of GNXNative deposited.
+    *
+    * @return Quantity of LP tokens minted to msg.sender.
+    */
     function addLiquidity(uint256 tokenDeposit, uint256 nativeDeposit) public override(IGNXPool) returns (uint256) {
         
         // Iniital liquidity add
@@ -123,16 +125,17 @@ contract GNXPool is ERC20, IGNXPool {
         }
     }
     
-    // Exchange LPs for equal return of GNXToken and GNXNative.
-    // 
-    // @notice Burn LP tokens in exchange for GNXNative and GNXTokens based 
-    // on current reserves, and amount being submitted. Portion of accrued fees
-    // are also returned in the respective token. Potentially results in
-    // impermenant loss.
-    //
-    // @param amount Quantity of LP tokens submitted for exchange.
-    //
-    // @return Tuple of GNXNative output, and GNXToken output.
+  /** Exchange LPs for equal return of GNXToken and GNXNative.
+    * 
+    * @notice Burn LP tokens in exchange for GNXNative and GNXTokens based 
+    * on current reserves, and amount being submitted. Portion of accrued fees
+    * are also returned in the respective token. Potentially results in
+    * impermenant loss.
+    *
+    * @param amount Quantity of LP tokens submitted for exchange.
+    *
+    * @return Tuple of GNXNative output, and GNXToken output.
+    */
     function removeLiquidity(uint256 amount) public override(IGNXPool) returns (uint256, uint256) {
         require(amount > 0, "GNX: amount too low");
         
@@ -149,19 +152,20 @@ contract GNXPool is ERC20, IGNXPool {
         return (nativeOutput, tokenOutput);
     }
         
-    // Private pricing function
-    // 
-    // @notice Private function used to determine "price," or output amount
-    // of one of the two assets traded in the pool. Fee is set to 0.5% and 
-    // is accrued in the token used as input.
-    //
-    // @dev Calculation is derived from uniswap's constant product AMM, x*y=k.
-    //
-    // @param inputAmount Quantity of tokens sent, or intend to be sent by user.
-    // @param inputReserve Quantity of output tokens stored in contract.
-    // @param outputReserve Quantity of output tokens stored in contract.
-    //
-    // @return Output token amount.
+  /** Private pricing function
+    * 
+    * @notice Private function used to determine "price," or output amount
+    * of one of the two assets traded in the pool. Fee is set to 0.5% and 
+    * is accrued in the token used as input.
+    *
+    * @dev Calculation is derived from uniswap's constant product AMM, x*y=k.
+    *
+    * @param inputAmount Quantity of tokens sent, or intend to be sent by user.
+    * @param inputReserve Quantity of output tokens stored in contract.
+    * @param outputReserve Quantity of output tokens stored in contract.
+    *
+    * @return Output token amount.
+    */
     function getAmount(
         uint256 inputAmount,
         uint256 inputReserve,
@@ -178,14 +182,15 @@ contract GNXPool is ERC20, IGNXPool {
         return (numerator/denominator);
     }
     
-    // Lookup function
-    // 
-    // @notice Lookup function to call current price for selling GNXNative to
-    // receive GNXToken.
-    //
-    // @param nativeSold Quantity of GNXNative to be sold.
-    //
-    // @return Output GNXToken amount.
+  /** Lookup function
+    * 
+    * @notice Lookup function to call current price for selling GNXNative to
+    * receive GNXToken.
+    *
+    * @param nativeSold Quantity of GNXNative to be sold.
+    *
+    * @return Output GNXToken amount.
+    */
     function nativeToToken(uint256 nativeSold) public view override(IGNXPool) returns (uint256) {
         require(nativeSold > 0, "GNX: too few GNXNative");
         uint256 _tokenReserve = tokenReserve();
@@ -193,14 +198,15 @@ contract GNXPool is ERC20, IGNXPool {
         return getAmount(nativeSold, _nativeReserve, _tokenReserve);
     }
    
-    // Lookup function
-    // 
-    // @notice Lookup function to call current price for selling GNXToken to
-    // receive GNXNative.
-    //
-    // @param tokensSold Quantity of GNXTokens to be sold.
-    //
-    // @return Output GNXNative amount.
+  /** Lookup function
+    * 
+    * @notice Lookup function to call current price for selling GNXToken to
+    * receive GNXNative.
+    *
+    * @param tokensSold Quantity of GNXTokens to be sold.
+    *
+    * @return Output GNXNative amount.
+    */
     function tokenToNative(uint256 tokensSold) public view override(IGNXPool) returns (uint256) {
         require(tokensSold > 0, "GNX: too few GNXToken");
         uint256 _tokenReserve = tokenReserve();
@@ -208,22 +214,23 @@ contract GNXPool is ERC20, IGNXPool {
         return getAmount(tokensSold, _tokenReserve, _nativeReserve);
     }
     
-    // Private buy function
-    // 
-    // @notice Private buy function which allows additional flexibility for
-    // public buyToken functions (or variations thereof).
-    //
-    // @dev Used to provide additional flexibility in the two other methods of
-    // tokens purchase. First method is generic purchase (buyTokens), while second
-    // is reserved for _tokenSwap allowing two tokens to be exchanged from pool
-    // to pool.
-    //
-    // @param minTokens Minimum number of tokens expected from output. Enforced
-    // in front-end to prevent price spoofing with bots.
-    // @param nativeSold Quantity of GNXNative sold.
-    // @param recipient Recipient of the output quantity of GNXTokens.
-    //
-    // @return Quantity of GNXTokens output.
+  /** Private buy function
+    * 
+    * @notice Private buy function which allows additional flexibility for
+    * public buyToken functions (or variations thereof).
+    *
+    * @dev Used to provide additional flexibility in the two other methods of
+    * tokens purchase. First method is generic purchase (buyTokens), while second
+    * is reserved for _tokenSwap allowing two tokens to be exchanged from pool
+    * to pool.
+    *
+    * @param minTokens Minimum number of tokens expected from output. Enforced
+    * in front-end to prevent price spoofing with bots.
+    * @param nativeSold Quantity of GNXNative sold.
+    * @param recipient Recipient of the output quantity of GNXTokens.
+    *
+    * @return Quantity of GNXTokens output.
+    */
     function _buyTokens(
         uint256 minTokens,
         uint256 nativeSold,
@@ -252,19 +259,20 @@ contract GNXPool is ERC20, IGNXPool {
         return tokenOutput;
     }
      
-    // Generic purchase function for GNXNative
-    // 
-    // @notice General purchase function where GNXTokens are sold in exchange 
-    // for GNXNative. Requires stating a minimum expected return to prevent
-    // price spoofing.
-    //
-    // @dev This function is akin to tokenSwawp. This is the base function
-    // for switching from GNXTokens to GNXNative.
-    //
-    // @param minNative Minimum expected output quantity of GNXNative.
-    // @param tokensSold Quantity of GNXTokens sold.
-    //
-    // @return Quantity of GNXNative output.
+  /** Generic purchase function for GNXNative
+    * 
+    * @notice General purchase function where GNXTokens are sold in exchange 
+    * for GNXNative. Requires stating a minimum expected return to prevent
+    * price spoofing.
+    *
+    * @dev This function is akin to tokenSwawp. This is the base function
+    * for switching from GNXTokens to GNXNative.
+    *
+    * @param minNative Minimum expected output quantity of GNXNative.
+    * @param tokensSold Quantity of GNXTokens sold.
+    *
+    * @return Quantity of GNXNative output.
+    */
     function buyNative(uint256 minNative, uint256 tokensSold) public override(IGNXPool) returns (uint256) {
         require(token.balanceOf(msg.sender) >= tokensSold, "GNX: not enough GNXTokens");
 
@@ -285,15 +293,16 @@ contract GNXPool is ERC20, IGNXPool {
         return nativeOutput;
     }
     
-    // Generic purchase function for GNXTokens.
-    // 
-    // @notice General purchase function for exchanging GNXNative for GNXTokens.
-    //
-    //
-    // @param minTokens Minimum number of tokens expected from output.
-    // @param nativeSold Quantity of GNXNative sold.
-    //
-    // @return Quantity of GNXTokens output.
+  /** Generic purchase function for GNXTokens.
+    * 
+    * @notice General purchase function for exchanging GNXNative for GNXTokens.
+    *
+    *
+    * @param minTokens Minimum number of tokens expected from output.
+    * @param nativeSold Quantity of GNXNative sold.
+    *
+    * @return Quantity of GNXTokens output.
+    */
     function buyTokens(uint256 minTokens, uint256 nativeSold) public override(IGNXPool) returns (uint256) {
     
         // Checks if user has enough GNXNative to sell
@@ -304,22 +313,23 @@ contract GNXPool is ERC20, IGNXPool {
         return tokenOutput;
     }
     
-    // helper function specifically for tokenSwap --> only meant for other exchange contracts
-    // ONLY FOR EXCHANGE CONTRACTS
-    
-    // Helper function specifically for _tokenSwap / tokenSwap.
-    //
-    // @notice Facilitates token to token swaps. Allows the circumvension of 
-    // double fees when changing from one GNXToken to another GNXToken. 
-    //
-    // @dev Used for GNXToken to GNXToken swaps. Done through exchanging GNXTokens
-    // in an intial swap to GNXToken which is then swapped to another GNXToken.
-    //
-    // @dev Should not be interacted with directly by user calls. This exists
-    // for other contracts to facilitate token swaps.
-    //
-    // @param minTokens Minimum number of tokens expected from output.
-    // @param nativeSold Quantity of GNXNative sold.
+  /** helper function specifically for tokenSwap --> only meant for other exchange contracts
+    * ONLY FOR EXCHANGE CONTRACTS
+    *
+    * Helper function specifically for _tokenSwap / tokenSwap.
+    *
+    * @notice Facilitates token to token swaps. Allows the circumvension of 
+    * double fees when changing from one GNXToken to another GNXToken. 
+    *
+    * @dev Used for GNXToken to GNXToken swaps. Done through exchanging GNXTokens
+    * in an intial swap to GNXToken which is then swapped to another GNXToken.
+    *
+    * @dev Should not be interacted with directly by user calls. This exists
+    * for other contracts to facilitate token swaps.
+    *
+    * @param minTokens Minimum number of tokens expected from output.
+    * @param nativeSold Quantity of GNXNative sold.
+    */
     function _tokenSwap(uint256 minTokens, uint256 nativeSold, address recipient) public override {
         _buyTokens(minTokens, nativeSold, recipient);
     }

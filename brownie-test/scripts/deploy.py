@@ -1,6 +1,6 @@
 from brownie import accounts, GNXNative, GNXToken, GNXPoolFactory, GNXTokenFactory
 
-# basically web3.py throughout here (some shit brownie specific syntax tho)
+# use web3.py syntax
 
 def main():
     # Deploy native
