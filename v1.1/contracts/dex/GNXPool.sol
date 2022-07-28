@@ -7,6 +7,13 @@ import {GNXNative} from "../tokens/GNXNative.sol";
 import {GNXPoolFactory} from "./GNXPoolFactory.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+  /** 
+    * @title GNXPool - Liquidity trading pools for wrapped GNXToken and GNXNative
+    * @author Bailey de Villiers (https://github.com/itchysnake)
+    * @dev Liquidity pool derived from Uniswap-V1. To be used specifically with
+    * GNX Pool Factory, GNX Tokens, and GNX Native.
+    */
+
 interface IGNXPool {
     function tokenReserve() external view returns (uint256);
     function nativeReserve() external view returns (uint256);
@@ -81,8 +88,10 @@ contract GNXPool is ERC20, IGNXPool {
         
         // Iniital liquidity add
         if (tokenReserve() == 0) {
-            token.transferFrom(msg.sender, address(this), tokenDeposit);      // Pulling GNXToken
-            native.transferFrom(msg.sender, address(this), nativeDeposit);    // Pulling GNXNative
+            // Pulling GNXToken
+            token.transferFrom(msg.sender, address(this), tokenDeposit);
+            // Pulling GNXNative
+            native.transferFrom(msg.sender, address(this), nativeDeposit);
             
             // Sends LPs in exchange for initial deposit
             uint256 _nativeReserve = nativeReserve();
@@ -100,9 +109,11 @@ contract GNXPool is ERC20, IGNXPool {
             uint256 tokenOutput = (nativeDeposit * _tokenReserve) / _nativeReserve;
             
             require(nativeDeposit >= tokenOutput, "GNX: insufficient token amount"); // Maintains pool price
-          
-            token.transferFrom(msg.sender, address(this), tokenDeposit);      // Pulls GNXToken
-            native.transferFrom(msg.sender, address(this), nativeDeposit);    // Pulls GNXNative
+            
+            // Pulls GNXToken
+            token.transferFrom(msg.sender, address(this), tokenDeposit);
+            // Pulls GNXNative
+            native.transferFrom(msg.sender, address(this), nativeDeposit);
             
             // Mints LP tokens
             uint256 liquidityTokens = (totalSupply() * nativeDeposit) / _nativeReserve;
@@ -238,10 +249,10 @@ contract GNXPool is ERC20, IGNXPool {
         
         require(tokenOutput > minTokens, "GNX: minTokens not met");
 
-        // Pull native
-        native.transferFrom(msg.sender, address(this), nativeSold);
-        // Send token
-        token.transfer(recipient ,tokenOutput);
+        // Pull GNXNative
+        token.transferFrom(msg.sender, address(this), nativeSold);
+        // Send GNXToken
+        native.transfer(recipient ,tokenOutput);
         
         emit Trade(recipient, address(token), nativeSold, tokenOutput);
         
@@ -272,9 +283,9 @@ contract GNXPool is ERC20, IGNXPool {
         
         require(nativeOutput > minNative, "GNX: minNative not met");
 
-        // Pull token
+        // Pull GNXToken
         token.transferFrom(msg.sender, address(this), tokensSold);
-        // Send native
+        // Send GNXNative
         native.transfer(msg.sender, nativeOutput);
         
         emit Trade(msg.sender, address(native), tokensSold, nativeOutput);
