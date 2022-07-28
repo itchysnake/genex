@@ -114,7 +114,7 @@ class Parse:
                         self.db.update_ownership(buyer_id, token_id, quantity)
                         
                         # update quotes
-                        quotes.
+                        
                         
                     # the bid order is perfectly filled
                     elif bid_unfilled - offer_unfilled == 0:

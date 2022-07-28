@@ -73,7 +73,6 @@ def build_deploy_contracts():
     # build pool
     # deploy token
     
-    
     # deploy and wait tx hash
     
     tx_hash = GNXNative.constructor().transact()
