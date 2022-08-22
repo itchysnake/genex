@@ -1,2 +1,13 @@
-__pycache__/
+__pycache__
+.env
+.history
+.hypothesis/
 .DS_Store
+tests.json
+deploy.py
+*_test.py
+
+# Folders
+venv/
+build/
+reports/
